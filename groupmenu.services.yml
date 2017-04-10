@@ -1,0 +1,13 @@
+services:
+  groupmenu.route_subscriber:
+    class: Drupal\groupmenu\Routing\GroupMenuRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  groupmenu.menu:
+    class: Drupal\groupmenu\GroupMenuService
+    arguments: ['@entity_type.manager', '@current_user', '@group.membership_loader']
+  groupmenu.config_overrides:
+    class: \Drupal\groupmenu\GroupMenuConfigOverrides
+    arguments: ['@config.storage', '@entity_type.manager', '@current_user']
+    tags:
+      - { name: config.factory.override, priority: 5 }
