@@ -25,13 +25,6 @@ class GroupMenuConfigOverrides implements ConfigFactoryOverrideInterface {
   protected $baseStorage;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The current user's account object.
    *
    * @var \Drupal\Core\Session\AccountInterface
@@ -57,14 +50,11 @@ class GroupMenuConfigOverrides implements ConfigFactoryOverrideInterface {
    *
    * @param \Drupal\Core\Config\StorageInterface $storage
    *   The configuration storage engine.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
    */
-  public function __construct(StorageInterface $storage, EntityTypeManagerInterface $entity_type_manager, AccountInterface $current_user) {
+  public function __construct(StorageInterface $storage, AccountInterface $current_user) {
     $this->baseStorage = $storage;
-    $this->entityTypeManager = $entity_type_manager;
     $this->currentUser = $current_user;
   }
 
@@ -144,8 +134,12 @@ class GroupMenuConfigOverrides implements ConfigFactoryOverrideInterface {
    *   An array of menu IDs.
    */
   protected function getUserGroupMenuIdsByGroupTypes(array $group_types, AccountInterface $account) {
+    // We can't use dependency injection for entity type manager, since this
+    // will cause circular dependencies.
+    $entity_type_manager = \Drupal::service('entity_type.manager');
+
     $plugin_id = 'group_menu:menu';
-    $group_content_types = $this->entityTypeManager->getStorage('group_content_type')
+    $group_content_types = $entity_type_manager->getStorage('group_content_type')
       ->loadByProperties([
         'content_plugin' => $plugin_id,
         'group_type' => array_keys($group_types),
@@ -155,7 +149,7 @@ class GroupMenuConfigOverrides implements ConfigFactoryOverrideInterface {
       return [];
     }
 
-    $group_contents = $this->entityTypeManager->getStorage('group_content')
+    $group_contents = $entity_type_manager->getStorage('group_content')
       ->loadByProperties([
         'type' => array_keys($group_content_types),
       ]);
